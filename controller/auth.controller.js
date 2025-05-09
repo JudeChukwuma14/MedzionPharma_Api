@@ -44,14 +44,22 @@ const loginAccount = async (req, res) => {
 
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: "1w" });
 
-        res.cookie("authToken", token, {
-            httpOnly: false,
-            secure: false,
-            sameSite: "Lax",
-            maxAge: 604800000, // 7 days
-            path: "/",
-        });
+        // res.cookie("authToken", token, {
+        //     httpOnly: true,
+        //     secure: true,
+        //     sameSite: "Lax",
+        //     maxAge: 604800000, // 7 days
+        //     path: "/",
+        // });
 
+        res.cookie("authToken", token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "None", // change this from "Lax" to "None"
+            maxAge: 604800000,
+            path: "/",
+          });
+          
         return res.status(200).json({
             message: "Login successful",
             success: true,
