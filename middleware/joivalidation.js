@@ -14,7 +14,7 @@ const createUser = (data) => {
 const loginUser = (data) => {
     const schema = joi.object({
         email: joi.string().email().required(),
-        password: joi.string().alphanum().min(8).max(30).required(),
+        password: joi.string().min(8).max(30).required(),
 
     })
     return schema.validate(data)
