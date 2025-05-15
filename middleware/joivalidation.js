@@ -3,7 +3,7 @@ const joi = require("joi")
 
 const createUser = (data) => {
     const schema = joi.object({
-        username: joi.string().alphanum().min(5).max(30).required(),
+        username: joi.string().min(3).max(30).required(),
         email: joi.string().email().required(),
         password: joi.string().min(8).max(30).required(),
         confirmPassword: joi.ref('password')
