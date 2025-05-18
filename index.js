@@ -7,10 +7,9 @@ dotenv.config();
 const app = express();
 const productRouter = require("./router/product.router");
 const authRouter = require("./router/auth.router");
-const cookies = require("cookie-parser");
 
-app.use(cookies());
-app.use(cors())
+
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
