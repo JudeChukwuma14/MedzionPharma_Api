@@ -34,36 +34,25 @@ const loginAccount = async (req, res) => {
         const { email, password } = req.body;
         const user = await userAuth.findOne({ email });
         if (!user) {
-            return res.status(409).json({ message: "Email and Password Mismatch", success: false });
+            return res.status(401).json({ message: "Email not found", success: false });
         }
 
         const validPassword = bcryptjs.compareSync(password, user.password);
         if (!validPassword) {
-            return res.status(409).json({ message: "Wrong credentials", success: false });
+            return res.status(401).json({ message: "Invalid password", success: false });
         }
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: "1w" });
+        const token = jwt.sign(
+            { id: user._id, role: user.role },
+            process.env.JWT_SECRET_KEY,
+            { expiresIn: "1w" }
+        );
 
-        // res.cookie("authToken", token, {
-        //     httpOnly: true,
-        //     secure: true,
-        //     sameSite: "Lax",
-        //     maxAge: 604800000, // 7 days
-        //     path: "/",
-        // });
-
-        res.cookie("authToken", token, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "None", // change this from "Lax" to "None"
-            maxAge: 604800000,
-            path: "/",
-          });
-          
         return res.status(200).json({
             message: "Login successful",
             success: true,
-            user: { id: user._id, username: user.username, email: user.email, }, token: token,
+            user: { id: user._id, username: user.username, email: user.email, role: user.role },
+            token,
         });
     } catch (error) {
         return res.status(500).json({ message: "Login failed", success: false, error: error.message });

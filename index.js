@@ -10,14 +10,7 @@ const authRouter = require("./router/auth.router");
 const cookies = require("cookie-parser");
 
 app.use(cookies());
-app.use(cors({
-  origin: ["https://medzionpharma-admin.vercel.app", "https://medzionpharma.vercel.app"],
-  credentials: true,
-}));
-// app.use(cors({
-//   origin: ["http://localhost:5173", "http://localhost:5174"],
-//   credentials: true,
-// }));
+app.use(cors())
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

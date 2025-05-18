@@ -10,6 +10,7 @@ const {
 } = require("../controller/product.controller");
 const { verifyToken } = require("../middleware/verifyToken");
 
+
 const router = express.Router();
 
 // Log requests for debugging
@@ -25,12 +26,12 @@ router.get("/allproducts", getAllProduct);
 router.get("/:id", getProductById);
 
 // Create product
-router.post("/postproduct", verifyToken, createProduct);
+router.post("/postproduct",verifyToken, createProduct);
 
 // Delete product
-router.delete("/:productId", verifyToken, deleteProduct);
+router.delete("/:productId",verifyToken, deleteProduct);
 
 // Update product
-router.put("/:productId", verifyToken, updateProduct);
+router.put("/:productId",verifyToken, updateProduct);
 
 module.exports = router;

@@ -5,70 +5,97 @@ const handleFileUploads = require("../lib/handlefile");
 
 const updateProduct = async (req, res) => {
     try {
+        // Check authentication
         if (!req.user) {
             return res.status(401).json({ message: "User not authenticated", success: false });
         }
 
+        // Verify admin role
         const accountId = req.user.id;
         const checkUser = await userAuth.findById(accountId);
-
         if (!checkUser || checkUser.role !== "admin") {
-            return res.status(401).json({ message: "Unauthorized: Only admins can update products", success: false });
+            return res.status(403).json({ message: "Unauthorized: Only admins can update products", success: false });
         }
 
+        // Check product existence
         const updateId = req.params.productId;
         const checkProduct = await Product.findById(updateId);
-
         if (!checkProduct) {
             return res.status(404).json({ message: "Product not found", success: false });
         }
 
-        // Update all possible fields from the request body
-        const updateFields = req.body;
-        Object.keys(updateFields).forEach(key => {
-            if (key in checkProduct) {
-                checkProduct[key] = updateFields[key];
+        // Define allowed fields to update (from frontend and schema)
+        const allowedFields = [
+            'name', 'category', 'brandName', 'stock', 'price', 'description', 'costPrice',
+            'weight', 'containerType', 'productForm', 'featured', 'published'
+        ];
+        const updateFields = {};
+        Object.keys(req.body).forEach(key => {
+            // Map frontend 'brand' to 'brandName'
+            const field = key === 'brand' ? 'brandName' : key;
+            if (allowedFields.includes(field)) {
+                updateFields[field] = req.body[key];
             }
         });
 
-        // Save the updated product with validation
-        await checkProduct.save();
+        // Handle file uploads if provided
+        if (req.files) {
+            if (req.files.brandLogo) {
+                updateFields.brandLogo = req.files.brandLogo[0].path;
+            }
+            if (req.files.images) {
+                updateFields.images = req.files.images.map(file => file.path);
+            }
+        }
+
+        // Set updatedBy
+        updateFields.updatedBy = accountId;
+
+        // Update product using findByIdAndUpdate for atomic operation
+        const updatedProduct = await Product.findByIdAndUpdate(
+            updateId,
+            { $set: updateFields },
+            { new: true, runValidators: true }
+        );
 
         return res.status(200).json({
             message: "Product updated successfully",
             success: true,
-            product: checkProduct
+            product: updatedProduct
         });
     } catch (error) {
-        return res.status(400).json({ message: error.message, success: false });
+        // Differentiate validation errors
+        if (error.name === 'ValidationError') {
+            return res.status(422).json({ message: error.message, success: false });
+        }
+        return res.status(500).json({ message: "Server error", success: false, error: error.message });
     }
 };
 
 const deleteProduct = async (req, res) => {
     try {
+        // Check authentication
         if (!req.user) {
             return res.status(401).json({ message: "User not authenticated", success: false });
         }
 
+        // Verify admin role
         const accountId = req.user.id;
         const checkUser = await userAuth.findById(accountId);
-
         if (!checkUser || checkUser.role !== "admin") {
-            return res.status(401).json({ message: "Unauthorized: Only admins can delete products", success: false });
+            return res.status(403).json({ message: "Unauthorized: Only admins can delete products", success: false });
         }
 
+        // Delete product
         const deleteId = req.params.productId;
-        const checkProduct = await Product.findById(deleteId);
-
-        if (!checkProduct) {
+        const deletedProduct = await Product.findByIdAndDelete(deleteId);
+        if (!deletedProduct) {
             return res.status(404).json({ message: "Product not found", success: false });
         }
 
-        await Product.findByIdAndDelete(deleteId);
-
         return res.status(200).json({ message: "Product deleted successfully", success: true });
     } catch (error) {
-        return res.status(400).json({ message: error.message, success: false });
+        return res.status(500).json({ message: "Server error", success: false, error: error.message });
     }
 };
 
